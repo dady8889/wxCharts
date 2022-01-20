@@ -103,6 +103,12 @@ bool wxMath2DPlotCtrl::UpdateData(std::size_t index,const wxVector<wxPoint2DDoub
     return true;
 }
 
+void wxMath2DPlotCtrl::ClearData(std::size_t index)
+{
+    m_math2dPlot.ClearDataset(index);
+    Update();
+}
+
 bool wxMath2DPlotCtrl::AddData(std::size_t index,const wxVector<wxPoint2DDouble> &points)
 {
     if (!m_math2dPlot.AddData(index,points))

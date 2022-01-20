@@ -66,6 +66,7 @@ public:
         wxSharedPtr<wxMath2DPlotOptions> &options, const wxPoint &pos = wxDefaultPosition,
         const wxSize &size = wxDefaultSize, long style = 0);
 
+    void ClearData(std::size_t index);
     bool UpdateData(std::size_t index,const wxVector<wxPoint2DDouble> &points);
     bool AddData(std::size_t index,const wxVector<wxPoint2DDouble> &points);
     bool RemoveDataset(std::size_t index);
@@ -77,9 +78,9 @@ public:
     void  SetChartOptions(const wxMath2DPlotOptions& opt);
     void  SetChartType(std::size_t index,const wxChartType &type);
 
-private:
     virtual wxMath2DPlot& GetChart();
 
+private:
     void CreateContextMenu();
     void Update();
 

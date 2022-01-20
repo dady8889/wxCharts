@@ -51,6 +51,19 @@ wxMath2DPlotDataset::wxMath2DPlotDataset(
 {
 }
 
+wxMath2DPlotDataset::wxMath2DPlotDataset(
+    const wxColor& lineColor, 
+    const wxColor& dotColor, 
+    const wxColor& dotStrokeColor, 
+    const wxChartType& chartType, 
+    const bool& showDots, 
+    const bool& showLine) 
+    : m_showDots(showDots), m_dotColor(dotColor),
+    m_dotStrokeColor(dotStrokeColor), m_showLine(showLine),
+    m_lineColor(lineColor), m_type(chartType)
+{
+}
+
 bool wxMath2DPlotDataset::ShowDots() const
 {
     return m_showDots;
@@ -290,34 +303,12 @@ void wxMath2DPlot::Shift(double dx,double dy)
 bool wxMath2DPlot::UpdateData(std::size_t index,const wxVector<wxPoint2DDouble> &points)
 {
     if (index >= m_datasets.size())
-    {
         return false;
-    }
 
-    auto transformX = m_options->GetAxisFuncX();
-    auto transformY = m_options->GetAxisFuncY();
-    Dataset::ptr newDataset(new Dataset(m_datasets[index]->ShowDots(),
-        m_datasets[index]->ShowLine(),m_datasets[index]->GetLineColor(),
-        m_datasets[index]->GetDotStrokeColor(),m_datasets[index]->GetType()));
+    for (size_t i = 0; i < points.size(); ++i)
+        m_datasets[index]->UpdatePoint(i, points[i]);
 
-    for (size_t j = 0; j < points.size(); ++j)
-    {
-        std::stringstream tooltip;
-        tooltip << "(" << transformX(points[j].m_x) << "," << transformY(points[j].m_y) << ")";
-        wxSharedPtr<wxChartTooltipProvider> tooltipProvider(
-            new wxChartTooltipProviderStatic("", tooltip.str(), m_datasets[index]->GetLineColor())
-        );
-
-        Point::ptr point(
-            new Point(points[j], tooltipProvider, 20 + j * 10, 0,
-                m_options->GetDotRadius(), m_options->GetDotStrokeWidth(),
-                m_datasets[index]->GetDotStrokeColor(), m_datasets[index]->GetDotColor(),
-                m_options->GetHitDetectionRange()));
-
-        newDataset->AppendPoint(point);
-    }
-    m_datasets[index] = newDataset;
-    Update();
+    // Update();
     return true;
 }
 
@@ -551,8 +542,10 @@ void wxMath2DPlot::DoFit()
         for (size_t j = 0; j < points.size(); ++j)
         {
             const Point::ptr& point = points[j];
-            point->SetPosition(m_grid.GetMapping().GetWindowPosition(
-                transformX(point->GetValue().m_x), transformY(point->GetValue().m_y)));
+
+            if (point != nullptr)
+                point->SetPosition(m_grid.GetMapping().GetWindowPosition(
+                    transformX(point->GetValue().m_x), transformY(point->GetValue().m_y)));
         }
     }
 }
@@ -560,6 +553,11 @@ void wxMath2DPlot::DoFit()
 void wxMath2DPlot::DoDraw(wxGraphicsContext &gc,
                           bool suppressTooltips)
 {
+    if (m_rendering)
+        return;
+
+    m_rendering = true;
+
     m_grid.Fit(gc);
     m_grid.Draw(gc);
     Fit();
@@ -640,6 +638,8 @@ void wxMath2DPlot::DoDraw(wxGraphicsContext &gc,
     {
         DrawTooltips(gc);
     }
+
+    m_rendering = false;
 }
 
 wxSharedPtr<wxVector<const wxChartsElement*>> wxMath2DPlot::GetActiveElements(const wxPoint &point)
@@ -657,4 +657,34 @@ wxSharedPtr<wxVector<const wxChartsElement*>> wxMath2DPlot::GetActiveElements(co
         }
     }
     return activeElements;
+}
+
+bool wxMath2DPlot::IsRendering()
+{
+    return m_rendering;
+}
+
+void wxMath2DPlot::Dataset::Clear()
+{
+    m_points.clear();
+}
+
+void wxMath2DPlot::Dataset::UpdatePoint(size_t index, wxPoint2DDouble value)
+{
+    m_points[index]->SetValue(value);
+}
+
+void wxMath2DPlot::Point::SetValue(wxPoint2DDouble value)
+{
+    m_value = value;
+}
+
+size_t wxMath2DPlot::GetDataCount(std::size_t index)
+{
+    return m_datasets[index]->GetPoints().size();
+}
+
+void wxMath2DPlot::ClearDataset(std::size_t index)
+{
+    m_datasets[index]->Clear();
 }

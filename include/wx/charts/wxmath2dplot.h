@@ -70,6 +70,14 @@ public:
         const bool &showDots = true,
         const bool &showLine = true);
 
+    wxMath2DPlotDataset(
+        const wxColor& lineColor,
+        const wxColor& dotColor,
+        const wxColor& dotStrokeColor,
+        const wxChartType& chartType = wxCHARTTYPE_LINE,
+        const bool& showDots = true,
+        const bool& showLine = true);
+
     /// Whether to show the points on the chart.
     /// @retval true Show the points.
     /// @retval false Don't show the points.
@@ -83,7 +91,6 @@ public:
     const wxColor& GetLineColor() const;
     const wxVector<wxPoint2DDouble>& GetData() const;
     const wxChartType& GetType() const;
-
 private:
     bool m_showDots;
     wxColor m_dotColor;
@@ -139,6 +146,9 @@ public:
     void  SetChartOptions(const wxMath2DPlotOptions& opt);
     bool  SetChartType(std::size_t index,const wxChartType &type);
 
+    bool IsRendering();
+    size_t GetDataCount(std::size_t index);
+    void ClearDataset(std::size_t index);
 private:
     void Initialize(const wxMath2DPlotData &data);
     void Update();
@@ -169,6 +179,8 @@ private:
 
         wxPoint2DDouble GetValue() const;
 
+        void SetValue(wxPoint2DDouble value);
+
     private:
         wxPoint2DDouble m_value;
         wxDouble m_hitDetectionRange;
@@ -195,6 +207,8 @@ private:
 
         const wxVector<Point::ptr>& GetPoints() const;
         void AppendPoint(Point::ptr point);
+        void Clear();
+        void UpdatePoint(size_t index, wxPoint2DDouble value);
 
     private:
         bool m_showDots;
@@ -207,6 +221,7 @@ private:
     };
 
 private:
+    bool m_rendering{ false };
     wxSharedPtr<wxMath2DPlotOptions> m_options;
     wxChartsGrid m_grid;
     wxVector<Dataset::ptr> m_datasets;
